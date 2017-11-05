@@ -6,16 +6,26 @@ import * as cheerio from 'cheerio';
 
 const DIR = '/home/link/Downloads/Anime';
 const BLACKLISTS = [
+    // Winter 2017
     '100% Pascal-sensei',
-    'Cardfight!! Vanguard G Z',
+    '3-gatsu no Lion',
     'Boruto - Naruto Next Generations',
+    'Cardfight!! Vanguard G Z',
     'Detective Conan',
     'Dragon Ball Super',
+    'Dynamic Chord',
     'IDOLiSH7',
     'Juuni Taisen',
+    'One Piece',
+    'Ousama Game',
+    'Puzzle and Dragons Cross',
     'THE iDOLM@STER CINDERELLA GIRLS Theater (TV)',
     'THE iDOLM@STER CINDERELLA GIRLS Theater (Web)',
     'The iDOLM@STER Side M',
+    'Tsukipro The Animation',
+    'Two Car',
+    'Wake Up, Girls! Shin Shou',
+    'Youkai Apartment no Yuuga na Nichijou',
     'Yu-Gi-Oh! VRAINS',
 ]
 
