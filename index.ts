@@ -14,7 +14,7 @@ async function readFileAsNonBlankLinesAsync(filename: string): Promise<string[]>
             if (err) {
                 return resolve([]);
             }
-            return resolve(data.toString().split('\n').filter(it => it));
+            return resolve(data.toString().split('\n').filter(it => it && !/^\s*#/.test(it)));
         });
     });
 }
@@ -53,6 +53,10 @@ async function writeFileAsync(filename: string, data: string): Promise<{}> {
     const completed = await readFileAsNonBlankLinesAsync(`${PREFIX}completed.txt`);
     const blacklist = await readFileAsNonBlankLinesAsync(`${PREFIX}blacklist.txt`);
     const whitelist = await readFileAsNonBlankLinesAsync(`${PREFIX}whitelist.txt`);
+
+    blacklist.forEach(dir => {
+        spawn('rm', ['-rf', dir], { cwd: DIR });
+    });
 
     const filteredItems = items
         .filter(it => whitelist.length === 0 || whitelist.indexOf(it.show) > -1)
