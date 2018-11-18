@@ -10,9 +10,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/cheerio": "^0.22.5",
+    "@types/cheerio": "^0.22.9",
     "@types/isomorphic-fetch": "0.0.34",
-    "cheerio": "^1.0.0-rc.2",
+    "cheerio": "^0.22.0",
     "isomorphic-fetch": "^2.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^10.12.9"
   }
 }

@@ -14,7 +14,9 @@ async function readFileAsNonBlankLinesAsync(filename: string): Promise<string[]>
             if (err) {
                 return resolve([]);
             }
-            return resolve(data.toString().split('\n').filter(it => it && !/^\s*#/.test(it)));
+            return resolve(data.toString()
+                .split('\n')
+                .filter(it => it));
         });
     });
 }
@@ -26,9 +28,6 @@ async function writeFileAsync(filename: string, data: string): Promise<{}> {
 }
 
 (async () => {
-    spawn('touch', [`${PREFIX}blacklist.txt`]);
-    spawn('touch', [`${PREFIX}whitelist.txt`]);
-
     const res = await fetch('http://horriblesubs.info/rss.php?res=1080');
     const text = await res.text();
     const $ = cheerio.load(text, { xmlMode: true });
@@ -51,26 +50,30 @@ async function writeFileAsync(filename: string, data: string): Promise<{}> {
         .get() as any;
 
     const completed = await readFileAsNonBlankLinesAsync(`${PREFIX}completed.txt`);
-    const blacklist = await readFileAsNonBlankLinesAsync(`${PREFIX}blacklist.txt`);
-    const whitelist = await readFileAsNonBlankLinesAsync(`${PREFIX}whitelist.txt`);
+    const blackAndWhiteList = await readFileAsNonBlankLinesAsync(`${PREFIX}blacklist.txt`);
+    const blacklist = blackAndWhiteList.filter(it => !/^\s*#/.test(it));
 
     blacklist.forEach(dir => {
         spawn('rm', ['-rf', dir], { cwd: DIR });
     });
 
-    const filteredItems = items
-        .filter(it => whitelist.length === 0 || whitelist.indexOf(it.show) > -1)
+    const downloadList = items
         .filter(it => blacklist.indexOf(it.show) === -1)
         .filter(it => completed.indexOf(it.link) === -1);
 
-    console.log(`All files: ${items.map(it => `\n  ${it.title}`).join('')}`);
-    console.log(`Files to download: ${filteredItems.map(it => `\n  ${it.title}`).join('')}`);
+    const whitelist = items
+        .filter(it => !blackAndWhiteList.find(line => line.indexOf(it.show) > -1)); // commented or not
 
-    await writeFileAsync(`${PREFIX}current-shows.txt`, filteredItems.map(it => it.show).join('\n'));
-    await writeFileAsync(`${PREFIX}to-download.txt`, filteredItems.map(it => `${it.link}\n dir=${it.show}`).join('\n'));
+    console.log(`All files: ${items.map(it => `\n  ${it.title}`).join('')}`);
+    console.log(`Files to download: ${downloadList.map(it => `\n  ${it.title}`).join('')}`);
 
     await new Promise((resolve, reject) => {
-        const toDownload = `${PREFIX}to-download.txt`;
+        appendFile(`${PREFIX}blacklist.txt`, whitelist.map(it => `# ${it.show}\n`).join(''), resolve);
+    });
+    await writeFileAsync(`${PREFIX}link.txt`, downloadList.map(it => `${it.link}\n dir=${it.show}`).join('\n'));
+
+    await new Promise((resolve, reject) => {
+        const toDownload = `${PREFIX}link.txt`;
         const childProcess = spawn('aria2c', [
             '-c',
             '--seed-time', '0',
@@ -84,8 +87,9 @@ async function writeFileAsync(filename: string, data: string): Promise<{}> {
     });
 
     await new Promise((resolve, reject) => {
-        appendFile(`${PREFIX}completed.txt`, filteredItems.map(it => `${it.link}\n`).join(''), resolve);
+        appendFile(`${PREFIX}completed.txt`, downloadList.map(it => `${it.link}\n`).join(''), resolve);
     });
+
 
     console.log('Exited happily!');
 })()
